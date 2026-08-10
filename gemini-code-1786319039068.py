@@ -9,6 +9,7 @@ import pandas as pd
 import streamlit as st
 
 # Importation sécurisée de FPDF
+# Importation sécurisée de FPDF
 try:
     from fpdf import FPDF
 except ModuleNotFoundError:
