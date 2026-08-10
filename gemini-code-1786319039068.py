@@ -5,10 +5,13 @@ import json
 import os
 import sqlite3
 import urllib.request
-from fpdf2 import FPDF
 import pandas as pd
 import streamlit as st
-
+try:
+    from fpdf import FPDF
+except ModuleNotFoundError:
+    # Fallback pour certaines versions de déploiement fpdf2
+    from fpdf2 import FPDF
 # ==========================================
 # 0. GESTION DE LA PERSISTANCE EXTERNE, CLOUD GÉRÉ & SÉCURITÉ MOTS DE PASSE
 # ==========================================
