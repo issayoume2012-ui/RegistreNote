@@ -5,7 +5,7 @@ import json
 import os
 import sqlite3
 import urllib.request
-from fpdf import FPDF
+from fpdf2 import FPDF
 import pandas as pd
 import streamlit as st
 
