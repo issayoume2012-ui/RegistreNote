@@ -7,11 +7,13 @@ import sqlite3
 import urllib.request
 import pandas as pd
 import streamlit as st
+
+# Importation sécurisée de FPDF (fpdf2 s'importe sous le nom de module 'fpdf')
 try:
     from fpdf import FPDF
 except ModuleNotFoundError:
-    # Fallback pour certaines versions de déploiement fpdf2
     from fpdf2 import FPDF
+
 # ==========================================
 # 0. GESTION DE LA PERSISTANCE EXTERNE, CLOUD GÉRÉ & SÉCURITÉ MOTS DE PASSE
 # ==========================================
@@ -1071,7 +1073,7 @@ elif st.session_state.espace_actif == "🔒 Espace Administration (Sécurisé)":
 
             st.markdown("---")
             st.markdown("### 🏫 Cycle Collège : Configuration des Coefficients (`coefficients_db`)")
-            st.info("⚠️ **Règle d'exclusion du Cycle Élémentaire** : Cette section est **exclusivement réservée au Cycle Collège** (classes de la 6ème à la 3ème). Le Cycle Élémentaire est strictement exclu de la pondération par coefficients et fonctionne uniquement sur la base des barèmes configurés dans le module dédié.")
+            st.info("⚠️ **Règle d'exclusion du Cycle Élémentaire** : Cette section est **exclusivement réservée au Cycle Collège** (classes de la 6ème à la 3ème). Le Cycle Élémentaire est strictly exclu de la pondération par coefficients et fonctionne uniquement sur la base des barèmes configurés dans le module dédié.")
             edited_coefs = st.data_editor(st.session_state.coefficients_db, num_rows="dynamic", use_container_width=True, key="edit_coefficients_college")
             if st.button("💾 Enregistrer les coefficients du collège"):
                 st.session_state.coefficients_db = edited_coefs
