@@ -8,12 +8,11 @@ import urllib.request
 import pandas as pd
 import streamlit as st
 
-# Importation sécurisée de FPDF (fpdf2 s'importe sous le nom de module 'fpdf')
+# Importation sécurisée de FPDF
 try:
     from fpdf import FPDF
 except ModuleNotFoundError:
     from fpdf2 import FPDF
-
 # ==========================================
 # 0. GESTION DE LA PERSISTANCE EXTERNE, CLOUD GÉRÉ & SÉCURITÉ MOTS DE PASSE
 # ==========================================
