@@ -181,7 +181,11 @@ def sauvegarder_donnees_externes(action_label="SAUVEGARDE_DONNEES"):
 
         for k, val in tables_to_save.items():
             try:
-                clean_val = nettoyer_donnees_pour_json(val)
+                # Conversion sécurisée des DataFrames d'EDT en dictionnaires si nécessaire
+                if k == "edt_grid_db" and isinstance(val, dict):
+                    clean_val = {str(ck): nettoyer_donnees_pour_json(cv) for ck, cv in val.items()}
+                else:
+                    clean_val = nettoyer_donnees_pour_json(val)
                 supabase.table("app_storage").upsert({"key": k, "data": clean_val}).execute()
             except Exception as e:
                 print(f"Erreur synchro Supabase pour {k}: {e}")
@@ -620,7 +624,11 @@ HEURES_LIST = [
 
 if "edt_grid_db" not in st.session_state:
     if "edt_grid_db" in saved_data:
-        st.session_state.edt_grid_db = {k: pd.DataFrame(v) for k, v in saved_data["edt_grid_db"].items()}
+        raw_edt = saved_data["edt_grid_db"]
+        if isinstance(raw_edt, dict):
+            st.session_state.edt_grid_db = {k: pd.DataFrame(v) if not isinstance(v, pd.DataFrame) else v for k, v in raw_edt.items()}
+        else:
+            st.session_state.edt_grid_db = {}
     else:
         st.session_state.edt_grid_db = {}
 
@@ -632,6 +640,8 @@ def get_or_create_edt(classe):
         st.session_state.edt_grid_db[classe] = df_def
     else:
         df_exist = st.session_state.edt_grid_db[classe]
+        if not isinstance(df_exist, pd.DataFrame):
+            df_exist = pd.DataFrame(df_exist)
         if "11h00-11h30" not in df_exist.columns:
             df_def = pd.DataFrame("", index=JOURS_LIST, columns=HEURES_LIST)
             for col in df_exist.columns:
@@ -1945,7 +1955,7 @@ elif st.session_state.espace_actif == "🏫 Administration XXL & Rapports":
             cls_gen = st.selectbox("Sélectionner la classe", classes_dispo, key="gen_cls_bul")
         with col_g2:
             periodes_gen = obtenir_periodes_pour_classe(cls_gen)
-            per_gen = st.selectbox("Sélectionner la période", periodes_dispo if not periodes_gen else periodes_gen, key="gen_per_bul")
+            per_gen = st.selectbox("Sélectionner la période", classes_dispo if not periodes_gen else periodes_gen, key="gen_per_bul")
 
         if cls_gen and per_gen:
             if st.button("📦 Générer le ZIP de tous les Bulletins de la Classe"):
@@ -1978,30 +1988,12 @@ elif st.session_state.espace_actif == "🏫 Administration XXL & Rapports":
             
             if st.button("💾 Enregistrer l'Emploi du Temps"):
                 st.session_state.edt_grid_db[edt_cls_sel] = edited_edt
-                sauvegarder_donnees_externes("MAJ_EDT")
+                sauvegarder_donnees_externes("EDT_UPDATE")
                 st.success("✅ Emploi du temps enregistré et synchronisé avec succès !")
 
-            pdf_edt_file = generer_pdf_edt(edt_cls_sel, edited_edt)
-            st.download_button(
-                "📥 Télécharger l'Emploi du Temps (PDF Officiel)",
-                data=pdf_edt_file,
-                file_name=f"Emploi_Du_Temps_{edt_cls_sel}.pdf",
-                mime="application/pdf"
-            )
-
     with tab_r3:
-        st.markdown("### 🤖 Assistant Pédagogique Intelligent (IA Saint-Louis)")
-        st.info("Posez vos questions concernant le fonctionnement de l'établissement, les notes, ou la scolarité.")
-        
-        question_ia = st.text_input("Votre question à l'assistant pédagogique :")
-        if question_ia:
-            reponse_ia = assistant_ia_repondre(question_ia)
-            st.markdown(
-                f"""
-                <div style="background-color: #F0F9FF; padding: 20px; border-radius: 16px; border: 2px solid #0EA5E9; margin-top: 15px;">
-                    <h4 style="color: #0EA5E9; margin-top: 0;">Réponse de l'Assistant IA :</h4>
-                    <p style="color: #0F172A; font-size: 1.1rem; font-weight: 600; margin-bottom: 0;">{reponse_ia}</p>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+        st.markdown("### 🤖 Assistant Pédagogique Intelligent (IA)")
+        user_question = st.text_input("Posez votre question à l'assistant pédagogique :", key="ia_q_input")
+        if user_question:
+            reponse_ia = assistant_ia_repondre(user_question)
+            st.markdown(f"> **Réponse de l'IA :** {reponse_ia}")
